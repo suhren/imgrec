@@ -1,11 +1,10 @@
 from flask import Flask, render_template, Response, jsonify
-import cv2
 import time
-
-from mtcnn.mtcnn import MTCNN
+import detection
+import cv2
 
 # MTCNN detector for faces
-detector = MTCNN()
+detector = detection.CascadeClassifier()
 
 def highlight_faces(image, faces):
     """
@@ -22,11 +21,12 @@ def highlight_faces(image, faces):
     # Red: OpenCV uses BGR instead of RGB!
     color = (0, 0, 255)
     thickness = 2
-    for face in faces:
-        x, y, width, height = face['box']
-        top_left = (x, y)
-        bottom_right = (x + width, y + height)    
+    
+    for f in faces:
+        top_left = (f.x, f.y)
+        bottom_right = (f.x + f.w, f.y + f.h)    
         image = cv2.rectangle(image, top_left, bottom_right, color, thickness) 
+    
     return image
 
 
@@ -40,7 +40,7 @@ class VideoCamera(object):
     def get_frame(self):
         ret, image = self.video.read()
 
-        faces = detector.detect_faces(image)
+        faces = detector.detect(image)
         image = highlight_faces(image, faces)
 
         ret, jpeg = cv2.imencode('.jpg', image)
