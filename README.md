@@ -51,6 +51,17 @@ Note: There will be unallocated space on the SD card. This can be expanded durin
 Finally:
 `sudo eject /dev/sd<x>`
 
+## On JETSON
+
+sudo apt-get install python3.7
+sudo apt-get install python3-pip
+
+Sudo important:
+`sudo pip3 install virtualenv`
+
+Find installed python verisons:
+ls /usr/bin/ | grep python
+
 
 ## Nvidia SDK manager
 Creat an account and log in to download the sdk manager from
