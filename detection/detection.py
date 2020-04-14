@@ -1,4 +1,3 @@
-from abc import ABC
 import cv2
 
 class Face:
@@ -11,16 +10,7 @@ class Face:
         self.box = (x, y, w, h)
 
 
-class FaceDetector(ABC):
-
-    def __init__(self):
-        pass
-
-    def detect(self, img):
-        pass
-
-
-class CascadeClassifier(FaceDetector):
+class CascadeClassifier:
 
     def __init__(self):
         self.detector = cv2.CascadeClassifier(
