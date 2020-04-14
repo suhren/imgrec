@@ -53,15 +53,27 @@ Finally:
 
 ## On JETSON
 
-sudo apt-get install python3.7
-sudo apt-get install python3-pip
+`sudo apt-get install python3.7`
+`sudo apt-get install python3-pip`
 
 Sudo important:
 `sudo pip3 install virtualenv`
 
 Find installed python verisons:
-ls /usr/bin/ | grep python
+`ls /usr/bin/ | grep python`
 
+OpenCV preinstalled for python versions in
+`/usr/lib/python<x>/dist-packages/cv2`
+
+Create virtual environment:
+`virtualenv -p /usr/bin/python<x> <env>`
+`cp /usr/lib/python<x>/dist-packages/cv2 <env>/lib/python<x>/dist-packages/cv2`
+
+Test opencv in the environment:
+`source <env>/bin/activate`
+`python` 
+`import cv2`
+`print cv2.__version__`
 
 ## Nvidia SDK manager
 Creat an account and log in to download the sdk manager from
