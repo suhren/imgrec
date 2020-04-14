@@ -1,0 +1,67 @@
+#!/bin/bash
+
+# Python Base Image from https://hub.docker.com/r/arm32v7/python/
+# FROM arm32v7/python:3.7-buster
+# FROM arm32v7/python:3.7-slim
+FROM balenalib/raspberry-pi-python:latest
+
+# set a directory for the app
+WORKDIR /usr/src/app
+
+# copy all the files to the container
+COPY . .
+
+# install dependencies
+# RUN apt-get --yes update
+# RUN apt-get --yes install python-pip
+ RUN apt-get update && apt-get upgrade && apt-get -y install \
+    python3-pip \
+    libhdf5-dev \
+    libhdf5-serial-dev \
+    libhdf5-103 \
+    libqtgui4 \
+    libqtwebkit4 \
+    libqt4-test \
+    python3-pyqt5 \
+    libatlas-base-dev \
+    libjasper-dev \
+    libilmbase-dev \
+    libopenexr-dev \
+    libgstreamer1.0-dev \
+    libavcodec-dev \
+    libavformat-dev \
+    libswscale-dev \
+    libv4l-dev \
+    libxvidcore-dev \
+    libx264-dev \
+&& rm -rf /var/lib/apt/lists/*
+
+#RUN apt-get update && apt-get -y install \
+#    python3-pip \
+#    libtiff-dev \
+#    zlib1g-dev \
+#    libjpeg-dev \
+#    libpng-dev \
+#    libavcodec-dev \
+#    libavformat-dev \
+#    libswscale-dev \
+#    libv4l-dev \
+#    libxvidcore-dev \
+#    libx264-dev \
+#&& rm -rf /var/lib/apt/lists/*
+
+# https://github.com/phusion/baseimage-docker/issues/319
+# RUN apt-get install -y --no-install-recommends apt-utils
+
+# RUN apt-get -y upgrade
+
+# RUN sudo pip install --upgrade pip
+# https://www.pyimagesearch.com/2018/09/19/pip-install-opencv/
+ 
+RUN pip3 install --no-cache-dir -r requirements_arm.txt
+
+# tell the port number the container should expose
+EXPOSE 5000
+
+# run the command
+CMD ["python3", "./app.py"]

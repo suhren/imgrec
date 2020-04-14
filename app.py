@@ -1,6 +1,6 @@
 from flask import Flask, render_template, Response, jsonify
 import time
-import detection
+from detection import detection
 import cv2
 
 # MTCNN detector for faces
@@ -65,4 +65,4 @@ def video_feed():
                 mimetype='multipart/x-mixed-replace; boundary=frame')
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', debug=True, port="5000")
+    app.run(host='0.0.0.0', debug=True, port='5000')
