@@ -15,23 +15,33 @@ Preferences -> Raspberry PI Configuration -> Interfaces -> SSH
 
 If not installed:
 (https://linuxize.com/post/how-to-enable-ssh-on-ubuntu-18-04/)
-`sudo apt update`
-`sudo apt install openssh-server`
+```
+sudo apt update
+sudo apt install openssh-server
+```
 
 Check if ssh service is running:
-`sudo systemctl status ssh`
+```
+sudo systemctl status ssh
+```
 
 Make sure SSH is allowed in firewall:
-`sudo ufw allow ssh`
+```
+sudo ufw allow ssh
+```
 
-
-Find IP address:
-`ifconfig -a`
-`ip addr show`
-`hostname -I`
+Find IP address with e.g. one of the commands:
+```
+ifconfig -a
+ip addr show
+hostname -I
+```
 
 On other computer:
-`ssh pi@<ip>`
+```
+ssh pi@<ip>
+```
+
 Select yes to add key fingerprint
 Type in password (default is "raspberry")
 
@@ -59,41 +69,45 @@ For these reasons, we can perform so called *cross compilation*. A cross compile
 ### Cross compilation using a Virtual Machine
 It is a good idea to set up our cross comilation environment in a completely new and unused system. The reason for this is to make sure that the *armhf* libraries and exectuables we install won't conflict with the x86-64 versions in the host os.
 
+#### Installing KVM
 In this example I will use KVM on Linux to create the virtual machine.
 (https://www.howtogeek.com/117635/how-to-install-kvm-and-create-virtual-machines-on-ubuntu/)
 (https://help.ubuntu.com/community/KVM/Installation)
 
 KVM requires hardware virtualization support (AMD-V or Intel VT-x). We can see if our system has this by running
-
-`egrep -c '(svm|vmx)' /proc/cpuinfo`
+```
+egrep -c '(svm|vmx)' /proc/cpuinfo
+```
 
 * 0 means that the CPU doesn't support hardware cirtualization
 * 1 or greater means that the CPU does support hardware virtualization. We do however need to make sure it is also enabled in BIOS.
 
 We can now install KVM with the following command
-`sudo apt-get install qemu-kvm libvirt-bin bridge-utils virt-manager`
+```
+sudo apt-get install qemu-kvm libvirt-bin bridge-utils virt-manager
+```
 
 Only the root user and members of the `libvirtd` group can use KVM. We can therefore add our user to this group:
-
-`sudo adduser <username> libvirtd`
+```
+sudo adduser <username> libvirtd
+```
 
 (https://askubuntu.com/questions/930491/group-libvirtd-does-not-exist-while-installing-qemu-kvm)
-There might be a problem with
-
-`Group 'libvirtd' does not exist while installing QEMU-KVM`
-
-To fix this, we can run
-
-`sudo addgroup libvirtd`
-`sudo adduser <username> libvirtd`
+There might be a problem with `Group 'libvirtd' does not exist while installing QEMU-KVM`. To fix this, we can run
+```
+sudo addgroup libvirtd
+sudo adduser <username> libvirtd
+```
 
 We can now run the `virsh` command to see if the installation was successful:
-
-`virsh -c qemu:///system list`
+```
+virsh -c qemu:///system list
+```
 
 We can now start the Virtual Machine manager. Either open it through the applications in your desktio environment or run
-
-`virt-manager`
+```
+virt-manager
+```
 
 (https://www.linux.com/audience/devops/creating-virtual-machines-kvm-part-1/)
 By default images are stored in `/var/lib/libvirt`. This is part of the system root, and it is quite common with Linux systems that this is mounted on a separate, smaller partition of your drive (commonly limited to 10-24 GB). For this reason it is a good idea to create new directories in `/home/<username>/`
@@ -104,65 +118,160 @@ Create the followin two directories in your home folder (or anywhere you please)
 
 We will use the latest release of Debian for the virtual machine. We can download an ISO image from https://www.debian.org/. Save this ISO to `/home/<username>/kvm-isos`.
 
+#### Creating the VM
 We are now ready to create the virtual machine:
 1. Go to `File -> New Virtual Machine`
-2. Select local install media (ISO image or CDROM)
-3. Select `Use ISO image` and `browse`
-4. We are now presented with the Storage Volume Screen. On the left you can see the storage locations, and on the right you can see the contents of them.
+1. Select local install media (ISO image or CDROM)
+1. Select `Use ISO image` and `browse`
+1. We are now presented with the Storage Volume Screen. On the left you can see the storage locations, and on the right you can see the contents of them.
     * Press the green `Add` button in the bottom left
     * Set the name to `kvm-pool` and the type to `dir: Filesystem Directory`
     * Go forward and set the target path to `/home/<username>/kvm-pool`
     * You should now see the new storage pool im the left pane.
     * Repeat this process again for `home/<username>/kvm-isos`
     * You should now see both the `kvm-pool` and `kvm-isos` in the left pane of the Storage Volume window.
-5. Select your downloaded ISO from the `kvm-isos` storage and press `Choose Volume` and `Forward`.
-6. You can now choose how much memory and how many CPUs will be allocated to the virtual machine. This is dependent on how much is available in your owns system of course, but I would suggest at least 2048 MB RAM and 1 CPU. 
-7. Select `Enable storage for this virtual machine` and `Select or create custom storage` and `Manage...`
-8. Select `kvm-pool` and create a new volume with the green plus sign in the top of the right panel.
-9. Name the volume something like `debian-cross-compile.qcow2` and the format `qcow2`. Set the max capacity to 20.0 GiB (dependent on how much is needed by the cross compilation). Finally press `Finish`.
-10. Now select your new storage volume and press `Choose Volume`.
-11. Move forward and set the name of your new VM and press `Finish`.
-12. Go through the installation steps of the OS on the VM.
+1. Select your downloaded ISO from the `kvm-isos` storage and press `Choose Volume` and `Forward`.
+1. You can now choose how much memory and how many CPUs will be allocated to the virtual machine. This is dependent on how much is available in your owns system of course, but I would suggest at least 2048 MB RAM and 1 CPU. 
+1. Select `Enable storage for this virtual machine` and `Select or create custom storage` and `Manage...`
+1. Select `kvm-pool` and create a new volume with the green plus sign in the top of the right panel.
+1. Name the volume something like `debian-cross-compile.qcow2` and the format `qcow2`. Set the max capacity to 20.0 GiB (dependent on how much is needed by the cross compilation). Finally press `Finish`.
+1. Now select your new storage volume and press `Choose Volume`.
+1. Move forward and set the name of your new VM and press `Finish`.
+1. Go through the installation steps of the OS on the VM.
 
 The following steps are specifically for installing Debian on the VM:
 (Note: to move the mouse cursour out from the VM window you can press CTRL + ALT)
 1. Select Graphical install
-2. Select language, location and keyboard layout
-3. Create a user with a password
-4. Select `Guided - use entire disk` -> Select the disk -> `All files in one partition`
-5. Wait for the install to finish and configure the package manager with the default values.
+1. Select language, location and keyboard layout
+1. Create a user with a password
+1. Select `Guided - use entire disk` -> Select the disk -> `All files in one partition`
+1. Wait for the install to finish and configure the package manager with the default values.
+    * (http://forums.debian.net/viewtopic.php?t=71051) When prompted if to install the GRUB bootloader to the master boot record, select yes and select the only drive.
+1. The VM should now be set up!
+
+#### Sharing a folder between the host and VM
+(https://nts.strzibny.name/how-to-set-up-shared-folders-in-virt-manager/)
+It is now convinient to set up a shared folder which can be used to move files between the host system and the VM.
+1. On the host, create a folder: `mkdir ~/vmshare`
+1. Set up the permissions: `chmod 777 ~/vmshare`
+1. In the virt-manager, got to `View > Details > Attach Hardware > Filesystem`
+1. Set the following settings:
+    * Type: Mount
+    * Driver: Default
+    * Mode: Mapped
+    * Source path: `/home/<username>/vmshare`
+    * Target path: `share` (this can be any name and will not be the name of the folder)
+1. Make sure to shutdown and restart the VM.
+1. In the VM, create the shared folder like `mkdir /vmshare`
+1. Mount it with `sudo mount -t 9p -o trans=virtio share /vmshare`
+1. You should now be able to share files using this folder.
+1. If we want the folder to be available every time we restart the VM, we can add the following row to `/etc/fstab`: `share   /vmshare    9p  trans=virtio,version=9p2000.L,rw    0   0`
+1. We also need to add the following rows to `etc/moduels/` to make sure the needed kernel modules are loaded at boot time. Otherwise we might get an error during boot (even though it may work when we press enter)
+```
+9p
+9pnet
+9pnet_virtio
+```
+1. Now, when the VM is restarted, we should still have access to the shared folder!
 
 
-
+#### Preparing the VM for cross-compilation
 Make sure our VM is up to date:
-`sudo apt update`
-`sudo apt upgrade`
+```
+sudo apt update
+sudo apt upgrade
+```
 
 We can now enable the *armhf* architecture:
-`sudo dpkg --add-architecture armhf`
-`sudo apt update`
-`sudo apt install qemu-user-static`
+```
+sudo dpkg --add-architecture armhf
+sudo apt update
+sudo apt install qemu-user-static
+```
 
 We will build OpenCV with support for Python and C++:
-`sudo apt-get install python3-dev`
-`sudo apt-get install python3-numpy`
-`sudo apt-get install python-dev`
-`sudo apt-get install python-numpy`
+```
+sudo apt-get install python3-dev
+sudo apt-get install python3-numpy
+sudo apt-get install python-dev
+sudo apt-get install python-numpy
+```
 
 We also need *libpython* for the *armhf* architecture:
-`sudo apt-get install libpython2-dev:armhf`
-`sudo apt-get install libpython3-dev:armhf`
-(run sudo apt-get update before sudo apt-get install libpython2-dev:armhf?)
+```
+sudo apt-get install libpython2-dev:armhf
+sudo apt-get install libpython3-dev:armhf
+```
 
 The following libraries are needed for GUI programs. If we are only going to run OpenCV without GUI we can ignore these.
-`sudo apt install libgtk-3-dev:armhf libcanberra-gtk3-dev:armhf`
+```
+sudo apt install libgtk-3-dev:armhf libcanberra-gtk3-dev:armhf
+```
 
 The following image and video format libraries are also required by OpenCV:
-`sudo apt install libtiff-dev:armhf zlib1g-dev:armhf`
-`sudo apt install libjpeg-dev:armhf libpng-dev:armhf`
-`sudo apt install libavcodec-dev:armhf libavformat-dev:armhf libswscale-dev:armhf libv4l-dev:armhf`
-`sudo apt-get install libxvidcore-dev:armhf libx264-dev:armhf`
+```
+sudo apt install libtiff-dev:armhf zlib1g-dev:armhf
+sudo apt install libjpeg-dev:armhf libpng-dev:armhf
+sudo apt install libavcodec-dev:armhf libavformat-dev:armhf libswscale-dev:armhf libv4l-dev:armhf
+sudo apt-get install libxvidcore-dev:armhf libx264-dev:armhf
+```
 
+We can now install the cross compilers to create *armhf* binaries for the Raspberry PI:
+```
+sudo apt install crossbuild-essential-armhf
+sudo apt install gfortran-arm-linux-gnueabihf
+```
+
+Also install Cmake, git, pkg-config and wget:
+```
+sudo apt install cmake git pkg-config wget
+```
+
+Next, we can download the current release of OpenCV:
+```
+cd ~
+mkdir opencv_all && cd opencv_all
+wget -O opencv.tar.gz https://github.com/opencv/opencv/archive/4.1.0.tar.gz
+tar xf opencv.tar.gz
+wget -O opencv_contrib.tar.gz https://github.com/opencv/opencv_contrib/archive/4.1.0.tar.gz
+tar xf opencv_contrib.tar.gz
+rm *.tar.gz
+```
+
+We need to modify two system variables to build *GTK+* support:
+```
+export PKG_CONFIG_PATH=/usr/lib/arm-linux-gnueabihf/pkgconfig:/usr/share/pkgconfig
+export PKG_CONFIG_LIBDIR=/usr/lib/arm-linux-gnueabihf/pkgconfig:/usr/share/pkgconfig
+```
+
+We can now use *Cmake* to generate the OpenCV build scripts:
+```
+cd opencv-4.1.0
+mkdir build && cd build
+cmake -D CMAKE_BUILD_TYPE=RELEASE \
+      -D CMAKE_INSTALL_PREFIX=/opt/opencv-4.1.0 \
+      -D CMAKE_TOOLCHAIN_FILE=../platforms/linux/arm-gnueabi.toolchain.cmake \
+      -D OPENCV_EXTRA_MODULES_PATH=~/opencv_all/opencv_contrib-4.1.0/modules \
+      -D OPENCV_ENABLE_NONFREE=ON \
+      -D ENABLE_NEON=ON \
+      -D ENABLE_VFPV3=ON \
+      -D BUILD_TESTS=OFF \
+      -D BUILD_DOCS=OFF \
+      -D PYTHON2_INCLUDE_PATH=/usr/include/python2.7 \
+      -D PYTHON2_LIBRARIES=/usr/lib/arm-linux-gnueabihf/libpython2.7.so \
+      -D PYTHON2_NUMPY_INCLUDE_DIRS=/usr/lib/python2/dist-packages/numpy/core/include \
+      -D PYTHON3_INCLUDE_PATH=/usr/include/python3.7m \
+      -D PYTHON3_LIBRARIES=/usr/lib/arm-linux-gnueabihf/libpython3.7m.so \
+      -D PYTHON3_NUMPY_INCLUDE_DIRS=/usr/lib/python3/dist-packages/numpy/core/include \
+      -D BUILD_OPENCV_PYTHON2=ON \
+      -D BUILD_OPENCV_PYTHON3=ON \
+      -D BUILD_EXAMPLES=OFF ..
+```
+
+If there were no errors, there should now be a *Makefile* in the *build* folder. We can now start the build which will take a relatively long time depending on your hardware (for me it took around 30 minutes with 2 allocated cores to the VM). The build is started with
+```
+make -j16
+```
 ### Cross compilation using Docker
 
 
@@ -243,11 +352,12 @@ Create virtual environment:
 `cp /usr/lib/python<x>/dist-packages/cv2 <env>/lib/python<x>/dist-packages/cv2`
 
 Test opencv in the environment:
-`source <env>/bin/activate`
-`python` 
-`import cv2`
-`print cv2.__version__`
-
+```
+source <env>/bin/activate
+python 
+import cv2
+print cv2.__version__
+```
 
 
 
@@ -267,12 +377,17 @@ pass: nano
 
 ## SSH
 On Jetson:
-Find IP address:
-`ifconfig -a`
-`ip addr show`
-`hostname -I`
+Find IP address with e.g. one of the commands:
+```
+ifconfig -a
+ip addr show
+hostname -I
+```
 
 On other computer:
-`ssh nano@<ip>`
+```
+ssh nano@<ip>
+```
+
 Select yes to add key fingerprint
 Type in password (default is "nano")
