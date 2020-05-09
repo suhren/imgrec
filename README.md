@@ -272,6 +272,52 @@ If there were no errors, there should now be a *Makefile* in the *build* folder.
 ```
 make -j16
 ```
+
+```
+sudo make install/strip
+```
+
+```
+cd /opt/opencv-4.1.0/lib/python3.7/dist-packages/cv2/python-3.7/
+sudo cp cv2.cpython-37m-x86_64-linux-gnu.so cv2.so
+```
+
+```
+cd /opt
+tar -cjvf ~/opencv-4.1.0-armhf.tar.bz2 opencv-4.1.0
+cd ~
+```
+
+`pkg-config` is the software which is responsible for installing software. It gives the installation scripts a common interface to query already installed libraries to compile any software which depends on them. 
+
+We can define a package config file sor this purpose:
+
+```
+nano opencv.pc
+```
+
+```
+libdir = /opt/opencv-4.1.0/lib
+includedir = /opt/opencv-4.1.0/include/opencv4
+
+Name: OpenCV
+Description: OpenCV (Open Source Computer Vision Library) is an open source computer vision and machine learning software library.
+Version: 4.1.0
+Libs: -L${libdir} -lopencv_aruco -lopencv_bgsegm -lopencv_bioinspired -lopencv_calib3d -lopencv_ccalib -lopencv_core -lopencv_datasets -lopencv_dnn_objdetect -lopencv_dnn -lopencv_dpm -lopencv_face -lopencv_features2d -lopencv_flann -lopencv_freetype -lopencv_fuzzy -lopencv_gapi -lopencv_hfs -lopencv_highgui -lopencv_imgcodecs -lopencv_img_hash -lopencv_imgproc -lopencv_line_descriptor -lopencv_ml -lopencv_objdetect -lopencv_optflow -lopencv_phase_unwrapping -lopencv_photo -lopencv_plot -lopencv_quality -lopencv_reg -lopencv_rgbd -lopencv_saliency -lopencv_shape -lopencv_stereo -lopencv_stitching -lopencv_structured_light -lopencv_superres -lopencv_surface_matching -lopencv_text -lopencv_tracking -lopencv_videoio -lopencv_video -lopencv_videostab -lopencv_xfeatures2d -lopencv_ximgproc -lopencv_xobjdetect -lopencv_xphoto
+Cflags: -I${includedir}
+```
+
+This tells the system that the libraries can be found in `/opt/opencv-4.1.0/lib` and its headers in `/opt/opencv-4.1.0/include/opencv4`. It also tells us that the name of the library is `OpenCV` and that the version is `4.1.0`. We also have a list of dependent libraries that need to be compiled by programs using this software. There is also a list of additional linker flags that must be used by code using this library.
+
+```
+sudo apt install libgtk-3-dev libcanberra-gtk3-dev
+sudo apt install libtiff-dev zlib1g-dev
+sudo apt install libjpeg-dev libpng-dev
+sudo apt install libavcodec-dev libavformat-dev libswscale-dev libv4l-dev
+sudo apt-get install libxvidcore-dev libx264-dev
+```
+
+
 ### Cross compilation using Docker
 
 
