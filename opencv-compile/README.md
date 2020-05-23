@@ -1,57 +1,4 @@
-# ML on Embedded Systems
-
-
-
-
-
-# Raspberry Pi
-
-## Install 
-https://www.raspberrypi.org/downloads/
-
-## Enable SSH
-On Raspberry:
-Preferences -> Raspberry PI Configuration -> Interfaces -> SSH
-
-If not installed:
-(https://linuxize.com/post/how-to-enable-ssh-on-ubuntu-18-04/)
-```
-sudo apt update
-sudo apt install openssh-server
-```
-
-Check if ssh service is running:
-```
-sudo systemctl status ssh
-```
-
-Make sure SSH is allowed in firewall:
-```
-sudo ufw allow ssh
-```
-
-Find IP address with e.g. one of the commands:
-```
-ifconfig -a
-ip addr show
-hostname -I
-```
-
-On other computer:
-```
-ssh pi@<ip>
-```
-
-Select yes to add key fingerprint
-Type in password (default is "raspberry")
-
-## Run Script
-python3 app.py
-
-## Run Docker
-sudo docker run --device /dev/video0:/dev/video0 -p 8888:5000 suhren/imgrec-arm
-
-## Cross compiling OpenCV 4
+# Cross compiling OpenCV 4
 (https://solarianprogrammer.com/2018/12/18/cross-compile-opencv-raspberry-pi-raspbian/)
 
 Usually, we compile exectuable code which is targeted for the same platform as the one we are compiling on. For example, if we compile code on a x86 platform, which is also targeted for an x86 platform.
@@ -64,12 +11,12 @@ There are however a few *major* drawback with this approach when it comes to dev
 
 For these reasons, we can perform so called *cross compilation*. A cross compiler is capable of building the exectuable code for another platform than the one the compiler is running on itself.
 
-### Cross compilation directly using the host OS
+## Cross compilation directly using the host OS
 
-### Cross compilation using a Virtual Machine
+## Cross compilation using a Virtual Machine
 It is a good idea to set up our cross comilation environment in a completely new and unused system. The reason for this is to make sure that the *armhf* libraries and exectuables we install won't conflict with the x86-64 versions in the host os.
 
-#### Installing KVM
+### Installing KVM
 In this example I will use KVM on Linux to create the virtual machine.
 (https://www.howtogeek.com/117635/how-to-install-kvm-and-create-virtual-machines-on-ubuntu/)
 (https://help.ubuntu.com/community/KVM/Installation)
@@ -118,7 +65,7 @@ Create the followin two directories in your home folder (or anywhere you please)
 
 We will use the latest release of Debian for the virtual machine. We can download an ISO image from https://www.debian.org/. Save this ISO to `/home/<username>/kvm-isos`.
 
-#### Creating the VM
+### Creating the VM
 We are now ready to create the virtual machine:
 1. Go to `File -> New Virtual Machine`
 1. Select local install media (ISO image or CDROM)
@@ -149,7 +96,7 @@ The following steps are specifically for installing Debian on the VM:
     * (http://forums.debian.net/viewtopic.php?t=71051) When prompted if to install the GRUB bootloader to the master boot record, select yes and select the only drive.
 1. The VM should now be set up!
 
-#### Sharing a folder between the host and VM
+### Sharing a folder between the host and VM
 (https://nts.strzibny.name/how-to-set-up-shared-folders-in-virt-manager/)
 It is now convinient to set up a shared folder which can be used to move files between the host system and the VM.
 1. On the host, create a folder: `mkdir ~/vmshare`
@@ -175,7 +122,7 @@ It is now convinient to set up a shared folder which can be used to move files b
 1. Now, when the VM is restarted, we should still have access to the shared folder!
 
 
-#### Preparing the VM for cross-compilation
+### Preparing the VM for cross-compilation
 Make sure our VM is up to date:
 ```
 sudo apt update
@@ -318,122 +265,4 @@ sudo apt-get install libxvidcore-dev libx264-dev
 ```
 
 
-### Cross compilation using Docker
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# Jetson Nano
-
-## SD Card Image
-Download image for the target hardware from
-https://developer.nvidia.com/embedded/downloads
-
-* `sudo apt-get install unzip`
-* `unzip ~/Downloads/nv-jetson-nano-sd-card-image-r32.3.1.zip`
-
-Insert SD card
-
-Find SD card with either
-* `ls -la /dev/sd*`
-* `sudo fdisk -l`
-* `df -h`
-* `dmesg | tail | awk '$3 == "sd" {print}'`
-
-If needed:
-`sudo apt-get install gparted`
-`sudo gparted`
-Select SD card and delete and merge all partitions
-
-Flash SD card:
-`sudo dd if=~/Downloads/sd-blob-b01.img of=/dev/sd<x> status=progress bs=4M`
-
-or
-
-Etcher:
-https://www.balena.io/etcher/
-
-Note: There will be unallocated space on the SD card. This can be expanded during the inital setup on the hardware.
-
-Finally:
-`sudo eject /dev/sd<x>`
-
-## On JETSON
-
-`sudo apt-get install python3.7`
-`sudo apt-get install python3-pip`
-
-Sudo important:
-`sudo pip3 install virtualenv`
-
-Find installed python verisons:
-`ls /usr/bin/ | grep python`
-
-OpenCV preinstalled for python versions in
-`/usr/lib/python<x>/dist-packages/cv2`
-
-Create virtual environment:
-`virtualenv -p /usr/bin/python<x> <env>`
-`cp /usr/lib/python<x>/dist-packages/cv2 <env>/lib/python<x>/dist-packages/cv2`
-
-Test opencv in the environment:
-```
-source <env>/bin/activate
-python 
-import cv2
-print cv2.__version__
-```
-
-
-
-## Nvidia SDK manager
-Creat an account and log in to download the sdk manager from
-https://developer.nvidia.com/nvidia-sdk-manager
-
-sudo apt install ~/Downloads/sdkmanager_1.0.1-5538_amd64.deb
-
-Open Nvidia SDK Manager and log in with your account
-
-Select Target Hardware
-
-## Login
-user: nano
-pass: nano
-
-## SSH
-On Jetson:
-Find IP address with e.g. one of the commands:
-```
-ifconfig -a
-ip addr show
-hostname -I
-```
-
-On other computer:
-```
-ssh nano@<ip>
-```
-
-Select yes to add key fingerprint
-Type in password (default is "nano")
+## Cross compilation using Docker
