@@ -1,47 +1,26 @@
 from flask import Flask, render_template, Response, jsonify
 import time
-from detection import detection
 import cv2
-
-# MTCNN detector for faces
-detector = detection.CascadeClassifier()
-
-def highlight_faces(image, faces):
-    """
-    Draw a bouding box around each face in the image
-
-    Args:
-        image (img): Image on which to draw the bounding boxes
-        faces (array): The array containing the faces
-    
-    Returns:
-        The image with the bounding boxes drawn
-    """
-    
-    # Red: OpenCV uses BGR instead of RGB!
-    color = (0, 0, 255)
-    thickness = 2
-    
-    for f in faces:
-        top_left = (f.x, f.y)
-        bottom_right = (f.x + f.w, f.y + f.h)    
-        image = cv2.rectangle(image, top_left, bottom_right, color, thickness) 
-    
-    return image
+from detection import detection
 
 
 class VideoCamera(object):
     def __init__(self):
         self.video = cv2.VideoCapture(0)
 
+        # keras models not thread-safe. Initalize the model here!
+        # https://stackoverflow.com/questions/53391618/tensor-tensorpredictions-softmax0-shape-1000-dtype-float32-is-not-an
+        
+        #self..model = detection.CascadeClassifier()
+        self.model = detection.VGG16Classifier()
+
     def __del__(self):
         self.video.release()        
 
     def get_frame(self):
         ret, image = self.video.read()
-
-        faces = detector.detect(image)
-        image = highlight_faces(image, faces)
+        image = cv2.flip(image, 1)
+        image = self.model.process(image)
 
         ret, jpeg = cv2.imencode('.jpg', image)
         return jpeg.tobytes()
